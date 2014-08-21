@@ -41,5 +41,9 @@ class OFFS
         raise UndefinedFlagError, "The #{flag} flag has not been defined."
       end
     end
+
+    def to_a
+      feature_flags.keys
+    end
   end
 end
