@@ -9,6 +9,10 @@ class OFFS
     def so_you_want_to(flag, &block)
       new(flag).so_you_want_to(&block)
     end
+
+    def feature_flags
+      Flags.instance.to_a
+    end
   end
 
   dependency(:feature_flags) { Flags.instance }
