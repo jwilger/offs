@@ -38,8 +38,10 @@ you could put the following in `config/initializers/offs_flags.rb`:
 ```ruby
 require 'offs'
 
-OFFS.flag :use_my_million_dollar_idea, false
-OFFS.flag :use_this_mostly_done_feature, true
+OFFS::Flags.set do |offs|
+  offs.flag :use_my_million_dollar_idea, false
+  offs.flag :use_this_mostly_done_feature, true
+end
 ```
 
 You've now defined the flags that your app will use, and you've given

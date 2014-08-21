@@ -13,18 +13,18 @@ describe OFFS do
     feature_flags: feature_flags
   }}
 
-  let(:feature_flags) {{
-    :my_cool_new_feature => feature_status
-  }}
-
-  let(:feature_status) { true }
+  let(:feature_flags) {
+    OFFS::Flags.set do |f|
+      f.flag :my_cool_new_feature, feature_status
+    end
+  }
 
   context 'when the specified feature flag is not defined' do
-    let(:feature_flags) {{}}
+    let(:feature_flags) { OFFS::Flags.new }
 
     it 'raises an error' do
       expect{ subject.so_you_want_to {} }.to \
-        raise_error(OFFS::UndefinedFlagError,
+        raise_error(OFFS::Flags::UndefinedFlagError,
                     "The #{flag} flag has not been defined.")
     end
   end
@@ -41,6 +41,8 @@ describe OFFS do
     end
 
     context "and the feature is turned on by default" do
+      let(:feature_status) { true }
+
       it 'executes the would_like_to block' do
         expect(would_like_to_blk).to receive(:call)
       end
