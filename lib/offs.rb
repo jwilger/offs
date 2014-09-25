@@ -24,6 +24,7 @@ class OFFS
 
   def so_you_want_to(&block)
     block.call(self)
+    return result
   end
 
   def would_like_to(&block)
@@ -37,9 +38,10 @@ class OFFS
   private
 
   attr_reader :flag
+  attr_accessor :result
 
   def when_flag(bool, &block)
-    block.call if flag_status == bool
+    self.result = block.call if flag_status == bool
   end
 
   def flag_status
