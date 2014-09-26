@@ -10,6 +10,18 @@ class OFFS
       new(flag).so_you_want_to(&block)
     end
 
+    def if_you_would_like_to(flag, &block)
+      so_you_want_to(flag) do |you|
+        you.would_like_to(&block)
+      end
+    end
+
+    def if_you_do_not_want_to(flag, &block)
+      so_you_want_to(flag) do |you|
+        you.may_still_need_to(&block)
+      end
+    end
+
     def feature_flags
       Flags.instance.to_a
     end

@@ -64,6 +64,22 @@ describe OFFS do
         expect(do_it).to eq :would_like_to_happened
         expect(do_it_backwards).to eq :would_like_to_happened
       end
+
+      it 'will execute the block for if_you_would_like_to' do
+        x = nil
+        OFFS.if_you_would_like_to(:my_cool_new_feature) do
+          x = 1
+        end
+        expect(x).to eq 1
+      end
+
+      it 'will not execute the block for if_you_do_not_want_to' do
+        x = nil
+        OFFS.if_you_do_not_want_to(:my_cool_new_feature) do
+          x = 1
+        end
+        expect(x).to be_nil
+      end
     end
 
     context "and the feature is turned off by default" do
@@ -82,6 +98,22 @@ describe OFFS do
       it 'returns the value of the may_still_need_to block' do
         expect(do_it).to eq :may_still_need_to_happened
         expect(do_it_backwards).to eq :may_still_need_to_happened
+      end
+
+      it 'will not execute the block for if_you_would_like_to' do
+        x = nil
+        OFFS.if_you_would_like_to(:my_cool_new_feature) do
+          x = 1
+        end
+        expect(x).to be_nil
+      end
+
+      it 'will execute the block for if_you_do_not_want_to' do
+        x = nil
+        OFFS.if_you_do_not_want_to(:my_cool_new_feature) do
+          x = 1
+        end
+        expect(x).to eq 1
       end
     end
   end
