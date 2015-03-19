@@ -16,6 +16,7 @@ describe OFFS do
   let(:feature_flags) {
     OFFS::Flags.set do |f|
       f.flag :my_cool_new_feature, feature_status
+      f.flag :my_runtime_feature, ->{ feature_status }
     end
   }
 
@@ -47,9 +48,7 @@ describe OFFS do
       end
     end
 
-    context "and the feature is turned on by default" do
-      let(:feature_status) { true }
-
+    shared_examples_for 'the feature is enabled' do
       it 'executes the would_like_to block' do
         expect(would_like_to_blk).to receive(:call)
         do_it
@@ -86,9 +85,19 @@ describe OFFS do
       end
     end
 
-    context "and the feature is turned off by default" do
-      let(:feature_status) { false }
+    context "and the feature is turned on by default" do
+      let(:feature_status) { true }
 
+      it_behaves_like 'the feature is enabled'
+
+      context "and the feature status is a Proc" do
+        let(:flag) { :my_runtime_feature }
+
+        it_behaves_like 'the feature is enabled'
+      end
+    end
+
+    shared_examples_for 'the feature is disabled' do
       it "executes the may_still_need_to block" do
         expect(may_still_need_to_blk).to receive(:call)
         do_it
@@ -123,6 +132,18 @@ describe OFFS do
       it 'raises an OFFS::FeatureDisabled error for raise_error_unless_we' do
         expect { OFFS.raise_error_unless_we(:my_cool_new_feature) }.to \
           raise_error(OFFS::FeatureDisabled, /my_cool_new_feature/)
+      end
+    end
+
+    context "and the feature is turned off by default" do
+      let(:feature_status) { false }
+
+      it_behaves_like 'the feature is disabled'
+
+      context "and the feature status is a Proc" do
+        let(:flag) { :my_runtime_feature }
+
+        it_behaves_like 'the feature is disabled'
       end
     end
   end

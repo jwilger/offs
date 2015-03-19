@@ -27,7 +27,12 @@ class OFFS
     end
 
     def enabled?(flag)
-      !!feature_flags[flag]
+      status = feature_flags[flag]
+      if status.respond_to?(:call)
+        status.call
+      else
+        !!status
+      end
     end
 
     def valid?(flag)
