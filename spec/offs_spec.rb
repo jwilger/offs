@@ -80,6 +80,10 @@ describe OFFS do
         end
         expect(x).to be_nil
       end
+
+      it 'noops for raise_error_unless_we' do
+        OFFS.raise_error_unless_we(:my_cool_new_feature)
+      end
     end
 
     context "and the feature is turned off by default" do
@@ -114,6 +118,11 @@ describe OFFS do
           x = 1
         end
         expect(x).to eq 1
+      end
+
+      it 'raises an OFFS::FeatureDisabled error for raise_error_unless_we' do
+        expect { OFFS.raise_error_unless_we(:my_cool_new_feature) }.to \
+          raise_error(OFFS::FeatureDisabled, /my_cool_new_feature/)
       end
     end
   end

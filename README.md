@@ -76,12 +76,20 @@ class Foo
       end
     end
   end
+
+  def do_something_for_new_feature
+    OFFS.raise_error_unless_we :use_my_million_dollar_idea
+    # The following code will only be reached if the feature is enabled.
+    # Otherwise we raise an OFFS::FeatureDisabled error
+  end
 end
 ```
 
 Note that you are not required to have *both* the `would_like_to` and
 `may_still_need_to` blocks present; they simply become a noop if not
-present.
+present. Shortcuts for this usage are provided via
+`OFFS.if_you_would_like_to` and `OFFS.if_you_do_not_want_to`,
+respectively.
 
 ## Contributing
 

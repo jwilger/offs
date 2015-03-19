@@ -5,6 +5,8 @@ require 'injectable_dependencies'
 class OFFS
   include InjectableDependencies
 
+  class FeatureDisabled < RuntimeError; end
+
   class << self
     def so_you_want_to(flag, &block)
       new(flag).so_you_want_to(&block)
@@ -20,6 +22,10 @@ class OFFS
       so_you_want_to(flag) do |you|
         you.may_still_need_to(&block)
       end
+    end
+
+    def raise_error_unless_we(flag)
+      new(flag).raise_error_unless_we
     end
 
     def feature_flags
@@ -47,6 +53,14 @@ class OFFS
     when_flag(false, &block)
   end
 
+  def raise_error_unless_we
+    unless flag_enabled?
+      raise FeatureDisabled,
+        "Attempted to access code that is only available when the '#{flag}' " \
+        + "feature is enabled, and it is currenlty disabled."
+    end
+  end
+
   private
 
   attr_reader :flag
@@ -59,6 +73,7 @@ class OFFS
   def flag_status
     feature_flags.enabled?(flag)
   end
+  alias_method :flag_enabled?, :flag_status
 
   def flag=(new_flag)
     @flag = feature_flags.validate!(new_flag)
