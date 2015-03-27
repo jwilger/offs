@@ -36,20 +36,15 @@ class OFFS
       end
     end
 
-    def valid?(flag)
-      feature_flags.has_key?(flag)
-    end
-
-    def validate!(flag)
-      if valid?(flag)
-        flag
-      else
-        raise UndefinedFlagError, "The #{flag} flag has not been defined."
-      end
-    end
-
     def to_a
       feature_flags.keys
+    end
+
+    private
+
+    def validate!(flag)
+      return if feature_flags.has_key?(flag)
+      raise UndefinedFlagError, "The #{flag} flag has not been defined."
     end
   end
 end
