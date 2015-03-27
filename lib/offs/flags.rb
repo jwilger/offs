@@ -13,6 +13,12 @@ class OFFS
       end
     end
 
+    def define_flags(*flag_names)
+      flag_names.each do |flag_name|
+        flag(flag_name, false)
+      end
+    end
+
     def flag(name, default)
       env_var_name = name.to_s.upcase
       feature_flags[name] = if ENV.has_key?(env_var_name)
