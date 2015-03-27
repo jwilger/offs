@@ -24,7 +24,7 @@ describe OFFS do
     let(:feature_flags) { OFFS::Flags.new }
 
     it 'raises an error' do
-      expect{ subject.so_you_want_to {} }.to \
+      expect{ subject.would_like_to {} }.to \
         raise_error(OFFS::Flags::UndefinedFlagError,
                     "The #{flag} flag has not been defined.")
     end

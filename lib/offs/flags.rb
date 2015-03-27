@@ -27,6 +27,7 @@ class OFFS
     end
 
     def enabled?(flag)
+      validate!(flag)
       status = feature_flags[flag]
       if status.respond_to?(:call)
         status.call

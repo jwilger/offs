@@ -63,7 +63,7 @@ class OFFS
 
   private
 
-  attr_reader :flag
+  attr_accessor :flag
   attr_accessor :result
 
   def when_flag(bool, &block)
@@ -74,8 +74,4 @@ class OFFS
     feature_flags.enabled?(flag)
   end
   alias_method :flag_enabled?, :flag_status
-
-  def flag=(new_flag)
-    @flag = feature_flags.validate!(new_flag)
-  end
 end
