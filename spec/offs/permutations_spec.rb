@@ -2,13 +2,9 @@ require 'spec_helper'
 require 'offs/permutations'
 
 describe OFFS::Permutations do
-  subject { described_class.new(dependencies: dependencies) }
+  subject { described_class.new(flags: flags) }
 
-  let(:dependencies) {{
-    flags: flags
-  }}
-
-  let(:flags) { double(:flags, to_a: [:feature_a, :feature_b, :feature_c]) }
+  let(:flags) { [:feature_a, :feature_b, :feature_c] }
 
   let(:possible_permutations) {[
     { feature_a: true,  feature_b: true,  feature_c: true  },

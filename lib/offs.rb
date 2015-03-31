@@ -1,42 +1,33 @@
 require "offs/version"
-require 'offs/flags'
-require 'injectable_dependencies'
+require "offs/flags"
+require 'offs/exceptions'
 
 class OFFS
-  include InjectableDependencies
-
-  class FeatureDisabled < RuntimeError; end
-
   class << self
-    def so_you_want_to(flag, &block)
-      new(flag).so_you_want_to(&block)
+    def so_you_want_to(flag, flag_status_checker: nil, &block)
+      new(flag, flag_status_checker: flag_status_checker).so_you_want_to(&block)
     end
 
-    def if_you_would_like_to(flag, &block)
-      so_you_want_to(flag) do |you|
+    def if_you_would_like_to(flag, flag_status_checker: nil, &block)
+      so_you_want_to(flag, flag_status_checker: flag_status_checker) do |you|
         you.would_like_to(&block)
       end
     end
 
-    def if_you_do_not_want_to(flag, &block)
-      so_you_want_to(flag) do |you|
+    def if_you_do_not_want_to(flag, flag_status_checker: nil, &block)
+      so_you_want_to(flag, flag_status_checker: flag_status_checker) do |you|
         you.may_still_need_to(&block)
       end
     end
 
-    def raise_error_unless_we(flag)
-      new(flag).raise_error_unless_we
-    end
-
-    def feature_flags
-      Flags.instance.to_a
+    def raise_error_unless_we(flag, flag_status_checker:)
+      new(flag, flag_status_checker: flag_status_checker) \
+        .raise_error_unless_we
     end
   end
 
-  dependency(:feature_flags) { Flags.instance }
-
-  def initialize(flag, options={})
-    initialize_dependencies options[:dependencies]
+  def initialize(flag, flag_status_checker: nil)
+    self.flag_status_checker = flag_status_checker || Flags.instance
     self.flag = flag
   end
 
@@ -63,15 +54,19 @@ class OFFS
 
   private
 
-  attr_accessor :flag
-  attr_accessor :result
+  attr_reader :flag
+  attr_accessor :result, :flag_status_checker
+
+  def flag=(new_flag)
+    flag_status_checker.validate!(new_flag)
+    @flag = new_flag
+  end
 
   def when_flag(bool, &block)
-    self.result = block.call if flag_status == bool
+    self.result = block.call if flag_enabled? == bool
   end
 
-  def flag_status
-    feature_flags.enabled?(flag)
+  def flag_enabled?
+    flag_status_checker.enabled?(flag)
   end
-  alias_method :flag_enabled?, :flag_status
 end

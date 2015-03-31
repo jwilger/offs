@@ -1,56 +1,60 @@
+require 'delegate'
+require 'offs/exceptions'
+
 class OFFS
-  class Flags
-    UndefinedFlagError = Class.new(StandardError)
-
+  class Flags < DelegateClass(Array)
     class << self
-      def instance
-        @instance ||= new
+      private :new
+      
+      def instance(*args)
+        unless @instance.nil? || args.empty?
+          raise AlreadyInitializedError
+        end
+        @instance ||= new(*args)
       end
 
-      def set(&block)
-        block.call(instance)
-        instance
-      end
-    end
-
-    def define_flags(*flag_names)
-      flag_names.each do |flag_name|
-        flag(flag_name, false)
+      def reset_instance!
+        @instance = nil
       end
     end
 
-    def flag(name, default)
-      env_var_name = name.to_s.upcase
-      feature_flags[name] = if ENV.has_key?(env_var_name)
-                              ENV[env_var_name].strip == '1'
-                            else
-                              default
-                            end
+    def initialize(*flags, value_sources: {})
+      self.value_sources = array_wrap(value_sources)
+      __setobj__(flags)
     end
 
-    def feature_flags
-      @feature_flags ||= {}
+    def validate!(flag)
+      return true if include?(flag)
+      raise UndefinedFlagError, "The #{flag} flag has not been defined."
     end
 
     def enabled?(flag)
       validate!(flag)
-      status = feature_flags[flag]
-      if status.respond_to?(:call)
-        status.call
-      else
-        !!status
-      end
-    end
-
-    def to_a
-      feature_flags.keys
+      !!final_values[flag]
     end
 
     private
 
-    def validate!(flag)
-      return if feature_flags.has_key?(flag)
-      raise UndefinedFlagError, "The #{flag} flag has not been defined."
+    attr_accessor :value_sources
+
+    def array_wrap(obj)
+      return [obj] unless obj.kind_of?(Array)
+      obj
+    end
+
+    def final_values
+      value_sources.reverse.reduce({}) { |final, source|
+        final.merge(sanitize(source))
+      }
+    end
+
+    def sanitize(data_hash)
+      data_hash.reduce({}) { |result, k_v_pair|
+        key = k_v_pair.first.to_s.downcase.to_sym
+        value = [true, 'true', 1, '1', 'on'].include?(k_v_pair.last)
+        result[key] = value
+        result
+      }
     end
   end
 end

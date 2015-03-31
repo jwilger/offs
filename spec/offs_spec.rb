@@ -5,28 +5,19 @@ describe OFFS do
     expect(described_class::VERSION).not_to be nil
   end
 
-  subject { described_class.new(flag, dependencies: dependencies) }
+  subject { described_class.new(flag, flag_status_checker: flag_status_checker) }
 
-  let(:flag) { :my_cool_new_feature }
+  let(:flag) { :use_my_new_feature }
 
-  let(:dependencies) {{
-    feature_flags: feature_flags
-  }}
-
-  let(:feature_flags) {
-    OFFS::Flags.set do |f|
-      f.flag :my_cool_new_feature, feature_status
-      f.flag :my_runtime_feature, ->{ feature_status }
-    end
-  }
+  let(:flag_status_checker) { double(:flag_status_checker, validate!: nil) }
 
   context 'when the specified feature flag is not defined' do
-    let(:feature_flags) { OFFS::Flags.new }
-
     it 'raises an error' do
+      allow(flag_status_checker).to receive(:validate!).with(flag) do
+        raise described_class::UndefinedFlagError, "Some message"
+      end
       expect{ subject.would_like_to {} }.to \
-        raise_error(OFFS::Flags::UndefinedFlagError,
-                    "The #{flag} flag has not been defined.")
+        raise_error(described_class::UndefinedFlagError, "Some message")
     end
   end
 
@@ -48,7 +39,12 @@ describe OFFS do
       end
     end
 
-    shared_examples_for 'the feature is enabled' do
+    context "and the feature is turned on by default" do
+      before(:each) do
+        allow(flag_status_checker).to receive(:enabled?).with(flag) \
+          .and_return(true)
+      end
+
       it 'executes the would_like_to block' do
         expect(would_like_to_blk).to receive(:call)
         do_it
@@ -66,7 +62,8 @@ describe OFFS do
 
       it 'will execute the block for if_you_would_like_to' do
         x = nil
-        OFFS.if_you_would_like_to(:my_cool_new_feature) do
+        OFFS.if_you_would_like_to(:use_my_new_feature,
+                                  flag_status_checker: flag_status_checker) do
           x = 1
         end
         expect(x).to eq 1
@@ -74,30 +71,26 @@ describe OFFS do
 
       it 'will not execute the block for if_you_do_not_want_to' do
         x = nil
-        OFFS.if_you_do_not_want_to(:my_cool_new_feature) do
+        OFFS.if_you_do_not_want_to(:use_my_new_feature,
+                                   flag_status_checker: flag_status_checker) do
           x = 1
         end
         expect(x).to be_nil
       end
 
       it 'noops for raise_error_unless_we' do
-        OFFS.raise_error_unless_we(:my_cool_new_feature)
+        OFFS.raise_error_unless_we(:use_my_new_feature,
+                                   flag_status_checker: flag_status_checker)
       end
     end
 
-    context "and the feature is turned on by default" do
-      let(:feature_status) { true }
-
-      it_behaves_like 'the feature is enabled'
-
-      context "and the feature status is a Proc" do
-        let(:flag) { :my_runtime_feature }
-
-        it_behaves_like 'the feature is enabled'
+    context "and the feature is turned off by default" do
+      before(:each) do
+        allow(flag_status_checker).to receive(:enabled?).with(flag) \
+          .and_return(false)
       end
-    end
 
-    shared_examples_for 'the feature is disabled' do
+
       it "executes the may_still_need_to block" do
         expect(may_still_need_to_blk).to receive(:call)
         do_it
@@ -115,7 +108,8 @@ describe OFFS do
 
       it 'will not execute the block for if_you_would_like_to' do
         x = nil
-        OFFS.if_you_would_like_to(:my_cool_new_feature) do
+        OFFS.if_you_would_like_to(:use_my_new_feature,
+                                  flag_status_checker: flag_status_checker) do
           x = 1
         end
         expect(x).to be_nil
@@ -123,27 +117,18 @@ describe OFFS do
 
       it 'will execute the block for if_you_do_not_want_to' do
         x = nil
-        OFFS.if_you_do_not_want_to(:my_cool_new_feature) do
+        OFFS.if_you_do_not_want_to(:use_my_new_feature,
+                                   flag_status_checker: flag_status_checker) do
           x = 1
         end
         expect(x).to eq 1
       end
 
       it 'raises an OFFS::FeatureDisabled error for raise_error_unless_we' do
-        expect { OFFS.raise_error_unless_we(:my_cool_new_feature) }.to \
-          raise_error(OFFS::FeatureDisabled, /my_cool_new_feature/)
-      end
-    end
-
-    context "and the feature is turned off by default" do
-      let(:feature_status) { false }
-
-      it_behaves_like 'the feature is disabled'
-
-      context "and the feature status is a Proc" do
-        let(:flag) { :my_runtime_feature }
-
-        it_behaves_like 'the feature is disabled'
+        expect {
+          OFFS.raise_error_unless_we(:use_my_new_feature,
+                                     flag_status_checker: flag_status_checker)
+        }.to raise_error(OFFS::FeatureDisabled, /use_my_new_feature/)
       end
     end
   end

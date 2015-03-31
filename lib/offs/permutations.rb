@@ -1,23 +1,19 @@
 require 'delegate'
-require 'injectable_dependencies'
 
 class OFFS
   class Permutations < DelegateClass(Enumerator)
-    include InjectableDependencies
-
-    dependency(:flags) { Flags.instance }
-
-    def initialize(options={})
-      initialize_dependencies(options[:dependencies])
+    def initialize(flags: Flags.instance)
+      self.flags = flags
       __setobj__ create_permutations
     end
 
     private
 
+    attr_accessor :flags
+
     def create_permutations
-      keys = flags.to_a
-      permutations = [true,false].repeated_permutation(keys.size).map { |values|
-        keys.zip(values).inject({}) { |m, pair|
+      permutations = [true,false].repeated_permutation(flags.size).map { |values|
+        flags.zip(values).inject({}) { |m, pair|
           m[pair[0]] = pair[1]
           m
         }
