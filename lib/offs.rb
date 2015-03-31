@@ -20,7 +20,7 @@ class OFFS
       end
     end
 
-    def raise_error_unless_we(flag, flag_status_checker:)
+    def raise_error_unless_we(flag, flag_status_checker: nil)
       new(flag, flag_status_checker: flag_status_checker) \
         .raise_error_unless_we
     end
