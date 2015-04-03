@@ -38,24 +38,28 @@ you could put the following in `config/initializers/offs_flags.rb`:
 ```ruby
 require 'offs'
 
-OFFS::Flags.set do |offs|
-  offs.flag :use_my_million_dollar_idea, false
-  offs.flag :use_this_mostly_done_feature, true
-end
+OFFS::Flags.instance(
+  :use_my_million_dollar_idea,
+  :use_this_mostly_done_feature,
+
+  value_sources: [
+    ENV,
+    FeatureFlag
+  ]
+)
 ```
 
-You've now defined the flags that your app will use, and you've given
-each flag a default value where `true` means you will use the new
-feature and `false` means you will use the old code instead.
-
-When running your application, you can override the default flag setting
-by setting environment variables. For instance, to reverse both of the
-flags above when running `rake` on your application code, you would do
-this:
-
-```sh
-USE_MY_MILLION_DOLLAR_IDEA=1 USE_THIS_MOSTLY_DONE_FEATURE=0 rake
-```
+The `value_sources` is an array of Hash-like objects that are keyed on
+the flag name (can be lower-case string, upper-case string, or symbol,
+i.e. `FeatureFlag['use_my_million_dollar_idea']`,
+`FeatureFlag['USE_MY_MILLION_DOLLAR_IDEA']`, or
+`FeatureFlag[:use_my_million_dollar_idea]`) and should have a value of
+`true` if the flag is to be enabled or `false` if disabled. The sources
+are listed in order of precedence; in the above example, if a flag is
+disabled in `FeatureFlag` but enabled in `ENV`, then it will be
+considered enabled. However, if it is not set at all in `ENV`, then the
+value from `FeatureFlag` will be used, and it will be considered
+disabled.
 
 In your code, simply do the following in each place where you have new
 and/or existing code that should be run or not run depending on the
