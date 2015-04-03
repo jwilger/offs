@@ -50,6 +50,7 @@ class OFFS
 
     def sanitize(data_hash)
       data_hash.reduce({}) { |result, k_v_pair|
+        k_v_pair = k_v_pair.to_a
         key = k_v_pair.first.to_s.downcase.to_sym
         value = [true, 'true', 1, '1', 'on'].include?(k_v_pair.last)
         result[key] = value
